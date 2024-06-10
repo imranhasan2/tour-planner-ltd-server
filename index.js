@@ -37,11 +37,17 @@ async function run() {
 
 
         // guide
-        app.get('/guides',async(req,res) => {
-            const result=await guideCollection.find().toArray()
+        app.get('/guides', async (req, res) => {
+            const result = await guideCollection.find().toArray()
             res.send(result)
         })
 
+        app.get('/guideDetails/:id',async(req,res) =>{
+            const id =req.params.id;
+            const query ={_id: new ObjectId(id)}
+            const result = await guideCollection.findOne(query)
+            res.send(result)
+        })
 
         // packages
 
