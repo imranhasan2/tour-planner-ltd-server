@@ -9,9 +9,6 @@ app.use(cors())
 app.use(express.json())
 
 
-
-
-
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bhkveen.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -42,9 +39,9 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/guideDetails/:id',async(req,res) =>{
-            const id =req.params.id;
-            const query ={_id: new ObjectId(id)}
+        app.get('/guideDetails/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
             const result = await guideCollection.findOne(query)
             res.send(result)
         })
@@ -80,6 +77,39 @@ async function run() {
         })
 
 
+        // tour type
+
+
+        app.get('/tourTypes', async (req, res) => {
+            try {
+                const result = await packageCollection.aggregate([
+                    {
+                        $group: {
+                            _id: "$tourType",
+                            spotPhoto: { $first: "$spotPhoto" }
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            tourType: "$_id",
+                            spotPhoto: 1
+                        }
+                    }
+                ]).toArray();
+                res.send(result);
+            } catch (error) {
+                res.status(500).send({ message: "An error occurred", error });
+            }
+        });
+
+
+        app.get('/tour/:type', async (req, res) => {
+            const type = req.params.type;
+            const query = { tourType: type };
+            const result = await packageCollection.find(query).toArray();
+            res.send(result);
+        });
 
 
 
