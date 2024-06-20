@@ -30,6 +30,27 @@ async function run() {
         const packageCollection = client.db('tourDb').collection('package')
         const wishCollection = client.db('tourDb').collection('wishList')
         const guideCollection = client.db('tourDb').collection('guide')
+        const userCollection = client.db('tourDb').collection('user')
+
+
+        // user Collection
+        app.post('/users',async(req,res) =>{
+            const user =req.body
+
+            const query ={email : user?.email}
+
+            const existingUser = await userCollection.findOne(query)
+            if(existingUser){
+                return res.send({message:'user already exist',insertedId:null})
+            }
+
+            const result =await userCollection.insertOne(user)
+
+            res.send(result)
+        })
+
+
+
 
 
 
