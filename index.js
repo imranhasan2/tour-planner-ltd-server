@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 5000;
 const cors = require('cors')
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
 //middleware
@@ -33,6 +34,49 @@ async function run() {
         const userCollection = client.db('tourDb').collection('user')
 
 
+
+
+        // jwt token
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1hr' })
+            res.send({ token })
+        })
+
+
+
+
+        
+        const verifyToken = async (req, res, next) => {
+
+            console.log('inside verify token', req.headers.authorization)
+
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'forbidden access' })
+            }
+
+            const token = req.headers.authorization.split(' ')[1];
+            if (!token) {
+                return res.status(401).send({ message: 'forbidden access' });
+            }
+
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if (err) {
+                    return res.status(401).send({ message: 'forbidden access' })
+                }
+                req.decoded = decoded
+                next()
+            })
+
+
+        }
+
+
+
+
+
+
+
         // user Collection
         app.post('/users', async (req, res) => {
             const user = req.body
@@ -49,9 +93,10 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/users',async(req,res) =>{
-            const user =req.body;
-            const result =await userCollection.find(user).toArray()
+        app.get('/users',verifyToken, async (req, res) => {
+            const user = req.body;
+            console.log(req.headers)
+            const result = await userCollection.find(user).toArray()
 
             res.send(result)
         })
@@ -59,6 +104,27 @@ async function run() {
 
 
 
+        app.get('/users/admin/:email', async (req, res) => {
+            const email = req.params?.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let admin = false;
+            if (user) {
+                admin = user?.role === 'admin';
+            }
+            res.send({ admin });
+        });
+
+        app.get('/users/guide/:email', async (req, res) => {
+            const email = req.params?.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            let guide = false;
+            if (user) {
+                guide = user?.role === 'guide';
+            }
+            res.send({ guide });
+        });
 
         // admin && guide
 
