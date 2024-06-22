@@ -32,6 +32,7 @@ async function run() {
         const wishCollection = client.db('tourDb').collection('wishList')
         const guideCollection = client.db('tourDb').collection('guide')
         const userCollection = client.db('tourDb').collection('user')
+        const storyCollection = client.db('tourDb').collection('story')
 
 
 
@@ -46,7 +47,7 @@ async function run() {
 
 
 
-        
+
         const verifyToken = async (req, res, next) => {
 
             console.log('inside verify token', req.headers.authorization)
@@ -93,7 +94,7 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/users',verifyToken, async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const user = req.body;
             console.log(req.headers)
             const result = await userCollection.find(user).toArray()
@@ -104,7 +105,7 @@ async function run() {
 
 
 
-        app.get('/users/admin/:email', async (req, res) => {
+        app.get('/users/admin/:email', verifyToken, async (req, res) => {
             const email = req.params?.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
@@ -115,7 +116,7 @@ async function run() {
             res.send({ admin });
         });
 
-        app.get('/users/guide/:email', async (req, res) => {
+        app.get('/users/guide/:email', verifyToken, async (req, res) => {
             const email = req.params?.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
@@ -156,6 +157,20 @@ async function run() {
             res.send(result)
         })
 
+
+
+
+
+
+        // story section
+
+
+        app.post('/story', async (req, res) => {
+            const story = req.body
+            const result = await storyCollection.insertOne(story)
+            res.send(result)
+
+        })
 
 
 
@@ -200,6 +215,15 @@ async function run() {
             const item = req.body;
             const result = await wishCollection.insertOne(item)
             res.send(result)
+        })
+
+
+        app.delete('/wishList/:id',async(req,res) =>{
+            const id =req.params.id
+            const query={_id : new ObjectId(id)}
+            const result =await wishCollection.deleteOne(query)
+            res.send(result)
+
         })
 
 
